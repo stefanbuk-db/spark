@@ -22,6 +22,7 @@ import java.sql.{Connection, DriverManager}
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
+import scala.annotation.tailrec
 import scala.concurrent.TimeoutException
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
