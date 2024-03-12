@@ -38,7 +38,8 @@ import org.scalatest.time.SpanSugar._
 
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSession
-import org.apache.spark.util.DockerUtils
+import org.apache.spark.util.{DockerUtils, Utils}
+import org.apache.spark.util.Utils.timeStringAsSeconds
 
 abstract class DatabaseOnDocker {
   /**
