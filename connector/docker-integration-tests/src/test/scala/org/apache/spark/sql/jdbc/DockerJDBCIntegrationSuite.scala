@@ -23,13 +23,12 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import scala.annotation.tailrec
-import scala.concurrent.TimeoutException
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.async.{ResultCallback, ResultCallbackTemplate}
-import com.github.dockerjava.api.command.{CreateContainerResponse, PullImageResultCallback}
+import com.github.dockerjava.api.command.CreateContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model._
 import com.github.dockerjava.core.{DefaultDockerClientConfig, DockerClientImpl}
@@ -39,7 +38,7 @@ import org.scalatest.time.SpanSugar._
 
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSession
-import org.apache.spark.util.{DockerUtils, Utils}
+import org.apache.spark.util.DockerUtils
 import org.apache.spark.util.Utils.timeStringAsSeconds
 
 abstract class DatabaseOnDocker {
