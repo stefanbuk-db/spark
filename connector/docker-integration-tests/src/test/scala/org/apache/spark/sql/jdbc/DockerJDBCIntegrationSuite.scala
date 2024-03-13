@@ -96,23 +96,27 @@ abstract class DatabaseOnDocker {
    * Optional step before container starts
    */
   def beforeContainerStart(
-      hostConfigBuilder: HostConfig,
-      containerConfigBuilder: ContainerConfig): Unit = {}
+                            hostConfigBuilder: HostConfig,
+                            containerConfigBuilder: ContainerConfig): Unit = {}
 }
 
 abstract class DockerJDBCIntegrationSuite
-  extends QueryTest
-    with SharedSparkSession
-    with Eventually
-    with DockerIntegrationFunSuite {
+  extends QueryTest with SharedSparkSession with Eventually with DockerIntegrationFunSuite {
 
   protected val dockerIp = DockerUtils.getDockerIp()
   val db: DatabaseOnDocker
-  val connectionTimeout = timeout(3.minutes)
   val keepContainer =
     sys.props.getOrElse("spark.test.docker.keepContainer", "false").toBoolean
   val removePulledImage =
     sys.props.getOrElse("spark.test.docker.removePulledImage", "true").toBoolean
+  protected val imagePullTimeout: Long =
+    timeStringAsSeconds(sys.props.getOrElse("spark.test.docker.imagePullTimeout", "5min"))
+  protected val startContainerTimeout: Long =
+    timeStringAsSeconds(sys.props.getOrElse("spark.test.docker.startContainerTimeout", "5min"))
+  protected val connectionTimeout: PatienceConfiguration.Timeout = {
+    val timeoutStr = sys.props.getOrElse("spark.test.docker.conn", "5min")
+    timeout(timeStringAsSeconds(timeoutStr).seconds)
+  }
 
   private var docker: DockerClient = _
   // Configure networking (necessary for boot2docker / Docker Machine)
@@ -128,16 +132,16 @@ abstract class DockerJDBCIntegrationSuite
 
   @tailrec private def retry_helper[T](n: Int)(body: => T): T = {
     try body
-    catch { case e: Throwable =>
-      if (n > 0) {
-        logWarning(e.getMessage, e)
-        logInfo(s"\n\n===== RETRYING =====\n")
-        retry_helper(n-1)(body)
-      }
-      else throw e
+    catch {
+      case e: Throwable =>
+        if (n > 0) {
+          logWarning(e.getMessage, e)
+          logInfo(s"\n\n===== RETRYING =====\n")
+          retry_helper(n - 1)(body)
+        }
+        else throw e
     }
   }
-
 
   override def beforeAll(): Unit = runIfTestsEnabled(s"Prepare for ${this.getClass.getName}") {
     retry_helper(5) {
@@ -168,6 +172,10 @@ abstract class DockerJDBCIntegrationSuite
               .awaitCompletion(connectionTimeout.value.toSeconds, TimeUnit.SECONDS)
             pulled = true
         }
+
+        docker.pullImageCmd(db.imageName)
+          .start()
+          .awaitCompletion(connectionTimeout.value.toSeconds, TimeUnit.SECONDS)
 
         val hostConfig = HostConfig
           .newHostConfig()
