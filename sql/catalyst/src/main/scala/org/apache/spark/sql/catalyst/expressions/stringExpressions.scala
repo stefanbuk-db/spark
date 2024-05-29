@@ -744,17 +744,22 @@ object Overlay {
 
   def calculate(input: UTF8String, replace: UTF8String, pos: Int, len: Int): UTF8String = {
     val builder = new UTF8StringBuilder
-    builder.append(input.substringSQL(1, pos - 1))
+    val lengthPrefix = if (pos >= 0) {
+      pos - 1
+    } else {
+      input.numChars + pos
+    }
+    builder.append(input.substringSQL(1, lengthPrefix))
     builder.append(replace)
     // If you specify length, it must be a positive whole number or zero.
     // Otherwise it will be ignored.
     // The default value for length is the length of replace.
-    val length = if (len >= 0) {
+    val lengthSuffix = if (len >= 0) {
       len
     } else {
       replace.numChars
     }
-    builder.append(input.substringSQL(pos + length, Int.MaxValue))
+    builder.append(input.substringSQL(pos + lengthSuffix, Int.MaxValue))
     builder.build()
   }
 

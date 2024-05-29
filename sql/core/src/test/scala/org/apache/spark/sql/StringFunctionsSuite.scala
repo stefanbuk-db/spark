@@ -294,13 +294,14 @@ class StringFunctionsSuite extends QueryTest with SharedSparkSession {
   test("string overlay function") {
     // scalastyle:off
     // non ascii characters are not allowed in the code, so we disable the scalastyle here.
-    val df = Seq(("Spark SQL", "Spark的SQL", "_", "CORE", "ANSI ", "tructured", 6, 7, 0, 2, 4)).
-      toDF("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k")
+    val df = Seq(("Spark SQL", "Spark的SQL", "_", "CORE", "ANSI ", "tructured", 6, 7, 0, 2, 4, -3)).
+      toDF("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l")
     checkAnswer(df.select(overlay($"a", $"c", $"g")), Row("Spark_SQL"))
     checkAnswer(df.select(overlay($"a", $"d", $"h")), Row("Spark CORE"))
     checkAnswer(df.select(overlay($"a", $"e", $"h", $"i")), Row("Spark ANSI SQL"))
     checkAnswer(df.select(overlay($"a", $"f", $"j", $"k")), Row("Structured SQL"))
     checkAnswer(df.select(overlay($"b", $"c", $"g")), Row("Spark_SQL"))
+    checkAnswer(df.select(overlay($"a", $"e", $"l", $"i")), Row("Spark ANSI SQL"))
     // scalastyle:on
   }
 
